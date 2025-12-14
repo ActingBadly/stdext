@@ -71,7 +71,7 @@ namespace stdext
     }
 
     template <byte_order Order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
-    constexpr T swap(T v) noexcept
+    constexpr T endian_swap(T v) noexcept
     {
         if constexpr (Order == byte_order::native_endian)
             return v;
@@ -84,7 +84,7 @@ namespace stdext
     T read(input_stream& s)
     {
         using sized_t = equivalent_sized_type_t<T>;
-        return T(swap<Order>(s.read<sized_t>()));
+        return T(endian_swap<Order>(s.read<sized_t>()));
     }
 
     template <byte_order Order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
@@ -94,7 +94,7 @@ namespace stdext
         if constexpr (Order != byte_order::native_endian)
         {
             for (size_t n = 0; n < count; ++n)
-                buffer[n] = swap<Order>(buffer[n]);
+                buffer[n] = endian_swap<Order>(buffer[n]);
         }
         return count;
     }
@@ -109,7 +109,7 @@ namespace stdext
     template <byte_order Order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     void write(output_stream& s, T v)
     {
-        s.write(swap<Order>(v));
+        s.write(endian_swap<Order>(v));
     }
 
     template <byte_order Order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
@@ -121,7 +121,7 @@ namespace stdext
         size_t n = 0;
         for (; n < count; ++n)
         {
-            auto v = swap<Order>(buffer[n]);
+            auto v = endian_swap<Order>(buffer[n]);
             if (s.write(&v, 1) == 0)
                 break;
         }
@@ -432,7 +432,7 @@ namespace stdext
     {
     public:
         endian_int() noexcept = default;
-        constexpr endian_int(T value) noexcept : value_(swap<ByteOrder>(value)) { }
+        constexpr endian_int(T value) noexcept : value_(endian_swap<ByteOrder>(value)) { }
         constexpr endian_int& operator = (T value) { value_ = value; return *this; }
 
         friend constexpr bool operator == (const endian_int& lhs, const endian_int& rhs) noexcept
@@ -505,7 +505,7 @@ namespace stdext
             return lhs >= rhs.get();
         }
 
-        constexpr T get() const noexcept { return swap<ByteOrder>(value_); }
+        constexpr T get() const noexcept { return endian_swap<ByteOrder>(value_); }
         constexpr operator T () const noexcept { return get(); }
 
     private:
@@ -528,7 +528,7 @@ namespace stdext
                 if (size != 4)
                     throw "_4cc literal must have four characters";
 
-                return swap<byte_order::big_endian>(
+                return endian_swap<byte_order::big_endian>(
                     uint32_t(str[0]) << 24
                     | uint32_t(str[1]) << 16
                     | uint32_t(str[2]) << 8
@@ -537,47 +537,47 @@ namespace stdext
 
             constexpr uint16_t operator ""_le16(unsigned long long v)
             {
-                return swap<byte_order::little_endian>(uint16_t(v));
+                return endian_swap<byte_order::little_endian>(uint16_t(v));
             }
 
             constexpr uint16_t operator ""_be16(unsigned long long v)
             {
-                return swap<byte_order::big_endian>(uint16_t(v));
+                return endian_swap<byte_order::big_endian>(uint16_t(v));
             }
 
             constexpr uint16_t operator ""_pdp16(unsigned long long v)
             {
-                return swap<byte_order::pdp_endian>(uint16_t(v));
+                return endian_swap<byte_order::pdp_endian>(uint16_t(v));
             }
 
             constexpr uint32_t operator ""_le32(unsigned long long v)
             {
-                return swap<byte_order::little_endian>(uint32_t(v));
+                return endian_swap<byte_order::little_endian>(uint32_t(v));
             }
 
             constexpr uint32_t operator ""_be32(unsigned long long v)
             {
-                return swap<byte_order::big_endian>(uint32_t(v));
+                return endian_swap<byte_order::big_endian>(uint32_t(v));
             }
 
             constexpr uint32_t operator ""_pdp32(unsigned long long v)
             {
-                return swap<byte_order::pdp_endian>(uint32_t(v));
+                return endian_swap<byte_order::pdp_endian>(uint32_t(v));
             }
 
             constexpr uint64_t operator ""_le64(unsigned long long v)
             {
-                return swap<byte_order::little_endian>(uint64_t(v));
+                return endian_swap<byte_order::little_endian>(uint64_t(v));
             }
 
             constexpr uint64_t operator ""_be64(unsigned long long v)
             {
-                return swap<byte_order::big_endian>(uint64_t(v));
+                return endian_swap<byte_order::big_endian>(uint64_t(v));
             }
 
             constexpr uint64_t operator ""_pdp64(unsigned long long v)
             {
-                return swap<byte_order::pdp_endian>(uint64_t(v));
+                return endian_swap<byte_order::pdp_endian>(uint64_t(v));
             }
         }
     }

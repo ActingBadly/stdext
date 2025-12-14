@@ -13,6 +13,8 @@
 #include <stdext/consumer.h>
 #include <stdext/optional.h>
 
+#include <memory>
+
 #include <cassert>
 
 
@@ -149,7 +151,7 @@ namespace stdext
         reference operator * () const { assert(_n != 0); return *_i; }
         const iterator& operator -> () const { assert(_n != 0); return _i; }
         counted_iterator_generator& operator ++ () { assert(_n != 0); ++_i; --_n; return *this; }
-        decltype(auto) operator ++ (int) { assert(_n != 0); auto&& r = _i++; --_n; return stdext::forward<decltype(r)>(r); }
+        decltype(declval<iterator&>()++) operator ++ (int) { assert(_n != 0); decltype(auto) r = _i++; --_n; return stdext::forward<decltype(r)>(r); }
         explicit operator bool () const noexcept { return _n != 0; }
         const iterator& base() const noexcept { return _i; }
         size_type count() const noexcept { return _n; }
@@ -172,36 +174,35 @@ namespace stdext
         using reference = const value_type&;
 
     public:
-        explicit function_generator(const Function& f) : _f(f), _value(_f()) { }
-        template <typename T = Function, STDEXT_REQUIRES(std::is_constructible_v<Function, T>)>
-        explicit function_generator(T&& f) : _f(stdext::forward<T>(f)), _value(_f()) { }
+        explicit function_generator(std::shared_ptr<Function> pf)
+            : _pf(stdext::move(pf)), _value((*_pf)()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b)
         {
-            return a._f == b._f && a._value == b._value;
+            return a._pf == b._pf && a._value == b._value;
         }
         friend bool operator != (const function_generator& a, const function_generator& b)
         {
-            return a._f != b._f || a._value != b._value;
+            return a._pf != b._pf || a._value != b._value;
         }
 
         friend void swap(function_generator&& a, function_generator&& b)
             noexcept(std::is_nothrow_swappable_v<Function> && std::is_nothrow_swappable_v<value_type>)
         {
-            swap(a._f, b._f);
+            swap(a._pf, b._pf);
             swap(a._value, b._value);
         }
 
     public:
         reference operator * () const noexcept { return _value; }
         pointer operator -> () const noexcept { return addressof(_value); }
-        function_generator& operator ++ () { _value = _f(); return *this; }
-        iterator_proxy<function_generator> operator ++ (int) { return exchange(_value, _f()); }
+        function_generator& operator ++ () { _value = (*_pf)(); return *this; }
+        iterator_proxy<function_generator> operator ++ (int) { return exchange(_value, (*_pf)()); }
         explicit operator bool () const noexcept { return true; }
 
     private:
-        Function _f;
+        std::shared_ptr<Function> _pf;
         value_type _value;
     };
 
@@ -216,36 +217,35 @@ namespace stdext
         using reference = const value_type&;
 
     public:
-        explicit function_generator(const Function& f) : _f(f), _opt(_f()) { }
-        template <typename T = Function, STDEXT_REQUIRES(std::is_constructible_v<Function, T>)>
-        explicit function_generator(T&& f) : _f(stdext::forward<T>(f)), _opt(_f()) { }
+        explicit function_generator(std::shared_ptr<Function> pf)
+            : _pf(stdext::move(pf)), _opt((*_pf)()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b)
         {
-            return a._f == b._f && a._opt == b._opt;
+            return a._pf == b._pf && a._opt == b._opt;
         }
         friend bool operator != (const function_generator& a, const function_generator& b)
         {
-            return a._f != b._f || a._opt != b._opt;
+            return a._pf != b._pf || a._opt != b._opt;
         }
 
         friend void swap(function_generator&& a, function_generator&& b)
             noexcept(std::is_nothrow_swappable_v<Function> && std::is_nothrow_swappable_v<optional<value_type>>)
         {
-            swap(a._f, b._f);
+            swap(a._pf, b._pf);
             swap(a._opt, b._opt);
         }
 
     public:
         reference operator * () const noexcept { assert(_opt.has_value()); return _opt.value(); }
         pointer operator -> () const noexcept { assert(_opt.has_value()); return addressof(_opt.value()); }
-        function_generator& operator ++ () { assert(_opt.has_value()); _opt = _f(); return *this; }
-        iterator_proxy<function_generator> operator ++ (int) { assert(_opt.has_value()); return _opt.exchange(_f()); }
+        function_generator& operator ++ () { assert(_opt.has_value()); _opt = (*_pf)(); return *this; }
+        iterator_proxy<function_generator> operator ++ (int) { assert(_opt.has_value()); return _opt.exchange((*_pf)()); }
         explicit operator bool() const noexcept { return _opt.has_value(); }
 
     private:
-        Function _f;
+        std::shared_ptr<Function> _pf;
         optional<value_type> _opt;
     };
 
@@ -375,7 +375,7 @@ namespace stdext
         STDEXT_REQUIRES(!std::is_void_v<R> && !is_std_input_range_v<Function>)>
     auto make_generator(Function&& function)
     {
-        return function_generator<F>(stdext::forward<Function>(function));
+        return function_generator<F>(std::make_shared<F>(stdext::forward<Function>(function)));
     }
 
     template <typename T, typename U = remove_cvref_t<T>>
@@ -403,7 +403,7 @@ namespace stdext
     template <typename T> constexpr auto can_generate_v = can_generate<T>::value;
 
     template <typename T, STDEXT_REQUIRES(is_generator_v<remove_cvref_t<T>>)>
-    T&& as_generator(T&& g)
+    decltype(auto) as_generator(T&& g)
     {
         return stdext::forward<T>(g);
     }

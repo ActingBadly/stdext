@@ -75,20 +75,20 @@ namespace test
 
     TEST_CASE("span constructor from contiguous range", "[span]")
     {
-        static std::array<int, 5> x;
+        static std::array<int, 5> a;
 
         SECTION("from same type")
         {
-            static constexpr stdext::span<int> s = x;
-            STATIC_REQUIRE(s.data() == x.data());
-            STATIC_REQUIRE(s.size() == x.size());
+            static constexpr stdext::span<int> s = a;
+            STATIC_REQUIRE(s.data() == a.data());
+            STATIC_REQUIRE(s.size() == a.size());
         }
 
         SECTION("with qualification conversion")
         {
-            static constexpr stdext::span<const int> s = x;
-            STATIC_REQUIRE(s.data() == x.data());
-            STATIC_REQUIRE(s.size() == x.size());
+            static constexpr stdext::span<const int> s = a;
+            STATIC_REQUIRE(s.data() == a.data());
+            STATIC_REQUIRE(s.size() == a.size());
         }
     }
 
@@ -212,19 +212,19 @@ namespace test
 
     TEST_CASE("view as range of bytes")
     {
-        const int x[] = { 0, 1, 2, 3, 4 };
-        stdext::span<const int> s = x;
+        const int a[] = { 0, 1, 2, 3, 4 };
+        stdext::span<const int> s = a;
         stdext::span<const std::byte> bytes = stdext::as_bytes(s);
-        CHECK(bytes.data() == reinterpret_cast<const std::byte*>(std::data(x)));
-        CHECK(bytes.size() == sizeof(x));
+        CHECK(bytes.data() == reinterpret_cast<const std::byte*>(std::data(a)));
+        CHECK(bytes.size() == sizeof(a));
     }
 
     TEST_CASE("view as range of modifiable bytes")
     {
-        int x[] = { 0, 1, 2, 3, 4 };
-        stdext::span<int> s = x;
+        int a[] = { 0, 1, 2, 3, 4 };
+        stdext::span<int> s = a;
         stdext::span<std::byte> bytes = stdext::as_writable_bytes(s);
-        CHECK(bytes.data() == reinterpret_cast<std::byte*>(std::data(x)));
-        CHECK(bytes.size() == sizeof(x));
+        CHECK(bytes.data() == reinterpret_cast<std::byte*>(std::data(a)));
+        CHECK(bytes.size() == sizeof(a));
     }
 }

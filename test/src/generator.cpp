@@ -546,12 +546,12 @@ namespace test
             bool operator != (const count_from& other) const noexcept { return value != other.value; }
         };
 
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count_from>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count_from&>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count_from>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count_from&>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count_from>>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count_from>&>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count_from>>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count_from>&>())), stdext::function_generator<count_from>>);
 
-        stdext::function_generator<count_from> g(count_from{0});
+        stdext::function_generator<count_from> g(std::make_shared<count_from>());
 
         SECTION("copies compare equal")
         {
@@ -564,7 +564,7 @@ namespace test
 
         SECTION("distinct values compare unequal")
         {
-            stdext::function_generator<count_from> h(count_from{5});
+            stdext::function_generator<count_from> h(std::make_shared<count_from>(count_from{5}));
             CHECK_FALSE(g == h);
             CHECK_FALSE(h == g);
             CHECK(g != h);
@@ -573,7 +573,7 @@ namespace test
 
         SECTION("swap")
         {
-            stdext::function_generator<count_from> h(count_from{5});
+            stdext::function_generator<count_from> h(std::make_shared<count_from>(count_from{5}));
 
             stdext::function_generator<count_from> test_g = g;
             stdext::function_generator<count_from> test_h = h;
@@ -631,12 +631,12 @@ namespace test
             bool operator != (const count& other) const noexcept { return value != other.value || remaining != other.remaining; }
         };
 
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count&>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count&>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count>>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count>&>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count>>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count>&>())), stdext::function_generator<count>>);
 
-        stdext::function_generator<count> g(count{0, 5});
+        stdext::function_generator<count> g(std::make_shared<count>(count{0, 5}));
 
         SECTION("copies compare equal")
         {
@@ -649,7 +649,7 @@ namespace test
 
         SECTION("distinct values compare unequal")
         {
-            stdext::function_generator<count> h(count{5, 5});
+            stdext::function_generator<count> h(std::make_shared<count>(count{5, 5}));
             CHECK_FALSE(g == h);
             CHECK_FALSE(h == g);
             CHECK(g != h);
@@ -658,7 +658,7 @@ namespace test
 
         SECTION("swap")
         {
-            stdext::function_generator<count> h(count{5, 5});
+            stdext::function_generator<count> h(std::make_shared<count>(count{5, 5}));
 
             stdext::function_generator<count> test_g = g;
             stdext::function_generator<count> test_h = h;

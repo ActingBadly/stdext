@@ -1,3 +1,9 @@
+// MSVC is too aggressive with warnings in release mode.  The optimizer sees a path
+// in instantiated template code that unavoidably exits via an exception and throws
+// a warning about unreachable code.  TODO: File a bug.
+#include <stdext/_impl/config.h>
+STDEXT_DISABLE_WARNING_MSVC(4702)   // unreachable code
+
 #include <stdext/optional.h>
 
 #include "types.h"
