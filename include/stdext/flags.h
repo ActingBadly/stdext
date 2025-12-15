@@ -28,9 +28,6 @@ namespace stdext
         constexpr flags() noexcept : _value() { }
         constexpr flags(enum_type value) noexcept : _value(value) { }
         constexpr flags& operator = (enum_type value) noexcept { _value = value; return *this; }
-        // Replace all instances of:
-// template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-// with the following MSVC-compatible SFINAE form:
 
 template <typename... Ts, std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), int> = 0>
 constexpr flags(Ts... values) noexcept
