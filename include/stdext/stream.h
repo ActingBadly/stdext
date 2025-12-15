@@ -746,7 +746,7 @@ namespace stdext
         [[nodiscard]] size_t do_read(byte* buffer, size_t size) final
         {
             assert(is_attached());
-            auto bytes = _stream->read(buffer, min(size, _max_extent));
+            auto bytes = _stream->read(buffer, std::min(size, _max_extent));
             _max_extent -= bytes;
             return bytes;
         }
@@ -754,7 +754,7 @@ namespace stdext
         [[nodiscard]] size_t do_skip(size_t size) final
         {
             assert(is_attached());
-            auto bytes = _stream->skip<byte>(min(size, _max_extent));
+            auto bytes = _stream->skip<byte>(std::min(size, _max_extent));
             _max_extent -= bytes;
             return bytes;
         }

@@ -28,8 +28,13 @@ namespace stdext
         constexpr flags() noexcept : _value() { }
         constexpr flags(enum_type value) noexcept : _value(value) { }
         constexpr flags& operator = (enum_type value) noexcept { _value = value; return *this; }
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr flags(Ts... values) noexcept : _value(enum_type((underlying_type() | ... | underlying_type(enum_type(values))))) { }
+        // Replace all instances of:
+// template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+// with the following MSVC-compatible SFINAE form:
+
+template <typename... Ts, std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), int> = 0>
+constexpr flags(Ts... values) noexcept
+    : _value(enum_type((underlying_type() | ... | underlying_type(enum_type(values))))) { }
 
         explicit constexpr flags(underlying_type value) noexcept : _value(enum_type(value)) { }
 
@@ -56,51 +61,55 @@ namespace stdext
             return *this;
         }
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr flags& set(Ts... values) noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            _value = enum_type(underlying_type(_value) | all_values);
-            return *this;
-        }
+        // Replace all instances of:
+        // template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        // with the following MSVC-compatible SFINAE form:
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr flags& reset(Ts... values) noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            _value = enum_type(underlying_type(_value) & ~all_values);
-            return *this;
-        }
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), flags>& set(Ts... values) noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    _value = enum_type(underlying_type(_value) | all_values);
+    return *this;
+}
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr flags& toggle(Ts... values) noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            _value = enum_type(underlying_type(_value) ^ all_values);
-            return *this;
-        }
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), flags>& reset(Ts... values) noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    _value = enum_type(underlying_type(_value) & ~all_values);
+    return *this;
+}
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr flags& keep(Ts... values) noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            _value = enum_type(underlying_type(_value) & all_values);
-            return *this;
-        }
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), flags>& toggle(Ts... values) noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    _value = enum_type(underlying_type(_value) ^ all_values);
+    return *this;
+}
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr bool test_any(Ts... values) const noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            return (underlying_type(_value) & all_values) != underlying_type();
-        }
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), flags>& keep(Ts... values) noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    _value = enum_type(underlying_type(_value) & all_values);
+    return *this;
+}
 
-        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
-        constexpr bool test_all(Ts... values) const noexcept
-        {
-            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
-            return (underlying_type(_value) & all_values) == all_values;
-        }
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), bool> test_any(Ts... values) const noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    return (underlying_type(_value) & all_values) != underlying_type();
+}
+
+template <typename... Ts>
+constexpr std::enable_if_t<(std::conjunction_v<std::is_convertible<Ts, enum_type>...>), bool> test_all(Ts... values) const noexcept
+{
+    underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+    return (underlying_type(_value) & all_values) == all_values;
+}
 
         constexpr bool test(flags mask, flags values) const noexcept
         {

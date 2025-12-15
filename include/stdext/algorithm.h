@@ -17,6 +17,11 @@
 #include <random>
 #include <vector>
 
+// Added this helper
+template <typename...> struct stdext_and : std::true_type {};
+template <typename B1, typename... Bn>
+struct stdext_and<B1, Bn...> : std::conditional<B1::value, stdext_and<Bn...>, std::false_type>::type {};
+
 
 namespace stdext
 {
@@ -181,7 +186,7 @@ namespace stdext
         }
     }
     template <typename Function, typename... Ranges,
-        STDEXT_REQUIRES((... && is_multi_pass_range<Ranges>::value))>
+        STDEXT_REQUIRES(stdext_and<is_multi_pass_range<Ranges>...>::value)>
     std::tuple<range_position_type<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
         std::tuple<range_position_type<Ranges>...> positions(ranges.begin_pos()...);

@@ -302,4 +302,29 @@ auto operator >> (Producer&& p, stdext::to_wchar_tag)
     return stdext::to_wchar_generator<stdext::generator_type<Producer>>(stdext::as_generator(stdext::forward<Producer>(p)));
 }
 
+template <typename Generator, typename Consumer,
+    STDEXT_REQUIRES(stdext::is_consumer_v<stdext::remove_cvref_t<Consumer>, char>)>
+bool operator >> (const stdext::to_multibyte_generator<Generator>& p, Consumer&& c)
+{
+    // iterate a copy of the generator (preserve original)
+    for (auto gen = p; gen; ++gen)
+    {
+        if (!stdext::forward<Consumer>(c)(*gen))
+            return false;
+    }
+    return true;
+}
+
+template <typename Generator, typename Consumer,
+    STDEXT_REQUIRES(stdext::is_consumer_v<stdext::remove_cvref_t<Consumer>, wchar_t>)>
+bool operator >> (const stdext::to_wchar_generator<Generator>& p, Consumer&& c)
+{
+    for (auto gen = p; gen; ++gen)
+    {
+        if (!stdext::forward<Consumer>(c)(*gen))
+            return false;
+    }
+    return true;
+}
+
 #endif
