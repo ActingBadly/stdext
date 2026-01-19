@@ -110,10 +110,7 @@ namespace stdext
     class to_multibyte_generator
     {
     public:
-        using iterator_category = generator_tag;
         using value_type = char;
-        using difference_type = ptrdiff_t;
-        using pointer = const char*;
         using reference = const char&;
         using generator = Generator;
 
@@ -150,22 +147,10 @@ namespace stdext
             return _value[_current];
         }
 
-        pointer operator -> () const noexcept
-        {
-            return &_value[_current];
-        }
-
         to_multibyte_generator& operator ++ ()
         {
             next();
             return *this;
-        }
-
-        iterator_proxy<to_multibyte_generator> operator ++ (int)
-        {
-            iterator_proxy<to_multibyte_generator> proxy = _value;
-            next();
-            return proxy;
         }
 
         explicit operator bool() const noexcept
@@ -203,10 +188,7 @@ namespace stdext
     class to_wchar_generator
     {
     public:
-        using iterator_category = generator_tag;
         using value_type = wchar_t;
-        using difference_type = ptrdiff_t;
-        using pointer = const wchar_t*;
         using reference = const wchar_t&;
         using generator = Generator;
 
@@ -241,22 +223,10 @@ namespace stdext
             return _value;
         }
 
-        pointer operator -> () const noexcept
-        {
-            return &_value;
-        }
-
         to_wchar_generator& operator ++ ()
         {
             next();
             return *this;
-        }
-
-        iterator_proxy<to_wchar_generator> operator ++ (int)
-        {
-            iterator_proxy<to_wchar_generator> proxy = _value;
-            next();
-            return proxy;
         }
 
         explicit operator bool() const noexcept

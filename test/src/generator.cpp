@@ -14,35 +14,18 @@ namespace test
         class generator
         {
         public:
-            using iterator_category = stdext::generator_tag;
             using value_type = int;
-            using difference_type = std::ptrdiff_t;
-            using pointer = const int*;
             using reference = int;
-
-        public:
-            STDEXT_PUSH_WARNINGS()
-            STDEXT_DISABLE_WARNING_CLANG("-Wunneeded-internal-declaration")
-            friend bool operator == (const generator& a, const generator& b) noexcept { return &a == &b; }
-            friend bool operator != (const generator& a, const generator& b) noexcept { return &a != &b; }
-            STDEXT_POP_WARNINGS()
 
         public:
             explicit operator bool () const noexcept { return true; }
             reference operator * () const noexcept { return value; }
-            pointer operator -> () const noexcept { return &value; }
             generator& operator ++ () noexcept { ++value; return *this; }
-            stdext::iterator_proxy<generator> operator ++ (int) noexcept { return value++; }
 
         private:
             static inline int value;
         };
     }
-
-    // generator_tag
-    static_assert(std::is_base_of_v<std::input_iterator_tag, stdext::generator_tag>);
-    static_assert(!std::is_base_of_v<std::output_iterator_tag, stdext::generator_tag>);
-    static_assert(!std::is_base_of_v<std::forward_iterator_tag, stdext::generator_tag>);
 
     // is_generator
     static_assert(!stdext::is_generator<void>::value);
@@ -220,30 +203,8 @@ namespace test
     static_assert(std::is_same_v<stdext::generator_value_type<stdext::function_generator<stdext::optional<int> (*)()>>, int>);
     static_assert(std::is_same_v<stdext::generator_value_type<stdext::function_generator<stdext::optional<const int> (*)()>>, int>);
     static_assert(std::is_same_v<stdext::generator_value_type<stdext::constant_generator<int>>, int>);
-    static_assert(std::is_same_v<stdext::generator_value_type<stdext::terminated_generator<int*>>, int>);
-    static_assert(std::is_same_v<stdext::generator_value_type<stdext::terminated_generator<const int*>>, int>);
-
-    // generator_difference_type
-    static_assert(std::is_same_v<stdext::generator_difference_type<generator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::delimited_iterator_generator<int*>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::delimited_iterator_generator<const int*>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::function_generator<int (*)()>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::function_generator<stdext::optional<int> (*)()>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::function_generator<stdext::optional<const int> (*)()>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::constant_generator<int>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::terminated_generator<int*>>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::generator_difference_type<stdext::terminated_generator<const int*>>, std::ptrdiff_t>);
-
-    // generator_pointer_type
-    static_assert(std::is_same_v<stdext::generator_pointer_type<generator>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::delimited_iterator_generator<int*>>, int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::delimited_iterator_generator<const int*>>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::function_generator<int (*)()>>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::function_generator<stdext::optional<int> (*)()>>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::function_generator<stdext::optional<const int> (*)()>>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::constant_generator<int>>, const int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::terminated_generator<int*>>, int*>);
-    static_assert(std::is_same_v<stdext::generator_pointer_type<stdext::terminated_generator<const int*>>, const int*>);
+    static_assert(std::is_same_v<stdext::generator_value_type<stdext::terminated_generator<int*, bool (*)(int)>>, int>);
+    static_assert(std::is_same_v<stdext::generator_value_type<stdext::terminated_generator<const int*, bool (*)(int)>>, int>);
 
     // generator_reference_type
     static_assert(std::is_same_v<stdext::generator_reference_type<generator>, int>);
@@ -253,8 +214,8 @@ namespace test
     static_assert(std::is_same_v<stdext::generator_reference_type<stdext::function_generator<stdext::optional<int> (*)()>>, const int&>);
     static_assert(std::is_same_v<stdext::generator_reference_type<stdext::function_generator<stdext::optional<const int> (*)()>>, const int&>);
     static_assert(std::is_same_v<stdext::generator_reference_type<stdext::constant_generator<int>>, const int&>);
-    static_assert(std::is_same_v<stdext::generator_reference_type<stdext::terminated_generator<int*>>, int&>);
-    static_assert(std::is_same_v<stdext::generator_reference_type<stdext::terminated_generator<const int*>>, const int&>);
+    static_assert(std::is_same_v<stdext::generator_reference_type<stdext::terminated_generator<int*, bool (*)(int)>>, int&>);
+    static_assert(std::is_same_v<stdext::generator_reference_type<stdext::terminated_generator<const int*, bool (*)(int)>>, const int&>);
 
     TEST_CASE("delimited_iterator_generator", "[generator]")
     {
@@ -349,26 +310,15 @@ namespace test
             CHECK(g.base() == i);
         }
 
-        SECTION("postincrement")
-        {
-            REQUIRE(g.base() == i);
-            CHECK(*g++ == *i);
-            CHECK(g.base() != i);
-            ++i;
-            CHECK(g.base() == i);
-        }
-
         SECTION("dereference matches iterator dereference")
         {
             REQUIRE(g.base() == i);
             CHECK(*g == *i);
-            CHECK(g.operator->() == i);
 
             ++g;
             ++i;
             REQUIRE(g.base() == i);
             CHECK(*g == *i);
-            CHECK(g.operator->() == i);
         }
 
         SECTION("conversion to bool")
@@ -384,7 +334,9 @@ namespace test
 
         SECTION("make_generator from iterator/sentinel pair")
         {
-            CHECK(stdext::make_generator(i, j) == g);
+            auto h = stdext::make_generator(i, j);
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            CHECK(h == g);
         }
 
         SECTION("make_generator from array")
@@ -392,6 +344,7 @@ namespace test
             auto f = std::begin(values);
             auto l = std::end(values);
             auto h = stdext::make_generator(values);
+            static_assert(stdext::is_generator_v<decltype(h)>);
             static_assert(std::is_same_v<decltype(h), stdext::delimited_iterator_generator<const int*, const int*>>);
 
             REQUIRE(h.end() == l);
@@ -497,26 +450,15 @@ namespace test
             CHECK(g.base() == i);
         }
 
-        SECTION("postincrement")
-        {
-            REQUIRE(g.base() == i);
-            CHECK(*g++ == *i);
-            CHECK(g.base() != i);
-            ++i;
-            CHECK(g.base() == i);
-        }
-
         SECTION("dereference matches iterator dereference")
         {
             REQUIRE(g.base() == i);
             CHECK(*g == *i);
-            CHECK(g.operator->() == i);
 
             ++g;
             ++i;
             REQUIRE(g.base() == i);
             CHECK(*g == *i);
-            CHECK(g.operator->() == i);
         }
 
         SECTION("conversion to bool")
@@ -530,9 +472,11 @@ namespace test
             CHECK_FALSE(g);
         }
 
-        SECTION("make_counted_generator")
+        SECTION("make_generator from iterator and size")
         {
-            CHECK(stdext::make_generator(i, std::size(values)) == g);
+            auto h = stdext::make_generator(i, std::size(values));
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            CHECK(h == g);
         }
     }
 
@@ -544,66 +488,17 @@ namespace test
             int operator () () noexcept { return value++; }
         };
 
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count_from>>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count_from>&>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count_from>>())), stdext::function_generator<count_from>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count_from>&>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count_from>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count_from&>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count_from>())), stdext::function_generator<count_from>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count_from&>())), stdext::function_generator<count_from>>);
 
-        stdext::function_generator<count_from> g(std::make_shared<count_from>());
-
-        SECTION("copies compare equal")
-        {
-            stdext::function_generator<count_from> h = g;
-            CHECK(g == h);
-            CHECK(h == g);
-            CHECK_FALSE(g != h);
-            CHECK_FALSE(h != g);
-        }
-
-        SECTION("distinct values compare unequal")
-        {
-            stdext::function_generator<count_from> h(std::make_shared<count_from>(count_from{5}));
-            CHECK_FALSE(g == h);
-            CHECK_FALSE(h == g);
-            CHECK(g != h);
-            CHECK(h != g);
-        }
-
-        SECTION("swap")
-        {
-            stdext::function_generator<count_from> h(std::make_shared<count_from>(count_from{5}));
-
-            stdext::function_generator<count_from> test_g = g;
-            stdext::function_generator<count_from> test_h = h;
-            REQUIRE(g == test_g);
-            REQUIRE(g != test_h);
-            REQUIRE(h != test_g);
-            REQUIRE(h == test_h);
-
-            stdext::swap(g, h);
-            CHECK(g != test_g);
-            CHECK(g == test_h);
-            CHECK(h == test_g);
-            CHECK(h != test_h);
-
-            stdext::swap(g, h);
-            CHECK(g == test_g);
-            CHECK(g != test_h);
-            CHECK(h != test_g);
-            CHECK(h == test_h);
-        }
+        stdext::function_generator<count_from> g(count_from{0});
 
         SECTION("preincrement")
         {
             REQUIRE(*g == 0);
             CHECK(&++g == &g);
-            CHECK(*g == 1);
-        }
-
-        SECTION("postincrement")
-        {
-            REQUIRE(*g == 0);
-            CHECK(*g++ == 0);
             CHECK(*g == 1);
         }
 
@@ -614,7 +509,22 @@ namespace test
 
         SECTION("make_generator")
         {
-            CHECK(stdext::make_generator(count_from{0}) == g);
+            auto h = stdext::make_generator(count_from{0});
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            static_assert(std::is_same_v<decltype(h), stdext::function_generator<count_from>>);
+            CHECK(*h == 0);
+            CHECK(*++h == 1);
+        }
+
+        SECTION("make_generator from lambda with captures")
+        {
+            int i = 0;
+            auto h = stdext::make_generator([&]{ return i++; });
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            CHECK(*h == 0);
+            CHECK(*h == 0);
+            CHECK(*++h == 1);
+            CHECK(*++h == 2);
         }
     }
 
@@ -627,54 +537,12 @@ namespace test
             stdext::optional<int> operator () () noexcept { if (remaining == 0) return stdext::nullopt; --remaining; return value++; }
         };
 
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count>>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<std::shared_ptr<count>&>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count>>())), stdext::function_generator<count>>);
-        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const std::shared_ptr<count>&>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<count&>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count>())), stdext::function_generator<count>>);
+        static_assert(std::is_same_v<decltype(stdext::function_generator(std::declval<const count&>())), stdext::function_generator<count>>);
 
-        stdext::function_generator<count> g(std::make_shared<count>(count{0, 5}));
-
-        SECTION("copies compare equal")
-        {
-            stdext::function_generator<count> h = g;
-            CHECK(g == h);
-            CHECK(h == g);
-            CHECK_FALSE(g != h);
-            CHECK_FALSE(h != g);
-        }
-
-        SECTION("distinct values compare unequal")
-        {
-            stdext::function_generator<count> h(std::make_shared<count>(count{5, 5}));
-            CHECK_FALSE(g == h);
-            CHECK_FALSE(h == g);
-            CHECK(g != h);
-            CHECK(h != g);
-        }
-
-        SECTION("swap")
-        {
-            stdext::function_generator<count> h(std::make_shared<count>(count{5, 5}));
-
-            stdext::function_generator<count> test_g = g;
-            stdext::function_generator<count> test_h = h;
-            REQUIRE(g == test_g);
-            REQUIRE(g != test_h);
-            REQUIRE(h != test_g);
-            REQUIRE(h == test_h);
-
-            stdext::swap(g, h);
-            CHECK(g != test_g);
-            CHECK(g == test_h);
-            CHECK(h == test_g);
-            CHECK(h != test_h);
-
-            stdext::swap(g, h);
-            CHECK(g == test_g);
-            CHECK(g != test_h);
-            CHECK(h != test_g);
-            CHECK(h == test_h);
-        }
+        stdext::function_generator<count> g(count{0, 5});
 
         SECTION("preincrement")
         {
@@ -683,26 +551,54 @@ namespace test
             CHECK(*g == 1);
         }
 
-        SECTION("postincrement")
-        {
-            REQUIRE(*g == 0);
-            CHECK(*g++ == 0);
-            CHECK(*g == 1);
-        }
-
         SECTION("conversion to bool")
         {
             CHECK(g);
-            ++g;
+            REQUIRE(++g);
             CHECK(g);
-            ++g;
+            REQUIRE(++g);
             CHECK(g);
-            ++g;
+            REQUIRE(++g);
             CHECK(g);
-            ++g;
+            REQUIRE(++g);
             CHECK(g);
-            ++g;
-            CHECK_FALSE(g);
+            CHECK_FALSE(++g);
+        }
+
+        SECTION("make_generator")
+        {
+            auto h = stdext::make_generator(count{0, 5});
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            static_assert(std::is_same_v<decltype(h), stdext::function_generator<count>>);
+            REQUIRE(h);
+            CHECK(*h == 0);
+            REQUIRE(h);
+            CHECK(*h == 0);
+            REQUIRE(++h);
+            CHECK(*h == 1);
+            REQUIRE(++h);
+            CHECK(*h == 2);
+            REQUIRE(++h);
+            CHECK(*h == 3);
+            REQUIRE(++h);
+            CHECK(*h == 4);
+            CHECK(!++h);
+        }
+
+        SECTION("make_generator from lambda with captures")
+        {
+            int i = 0;
+            auto h = stdext::make_generator([&]{ return i < 3 ? i++ : stdext::optional<int>(); });
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            REQUIRE(h);
+            CHECK(*h == 0);
+            REQUIRE(h);
+            CHECK(*h == 0);
+            REQUIRE(++h);
+            CHECK(*h == 1);
+            REQUIRE(++h);
+            CHECK(*h == 2);
+            CHECK(!++h);
         }
     }
 
@@ -765,13 +661,6 @@ namespace test
             CHECK(*g == 5);
         }
 
-        SECTION("postincrement")
-        {
-            REQUIRE(g);
-            CHECK(*g++ == 5);
-            CHECK(*g == 5);
-        }
-
         SECTION("conversion to bool")
         {
             REQUIRE(g);
@@ -795,7 +684,9 @@ namespace test
 
         SECTION("make_constant_generator")
         {
-            CHECK(stdext::make_constant_generator(5) == g);
+            auto h = stdext::make_constant_generator(5);
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            CHECK(h == g);
         }
     }
 
@@ -807,73 +698,20 @@ namespace test
             bool operator()(char x) const noexcept { return x == terminator; }
         };
 
-        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char*>(), std::declval<const IsValue&>())), stdext::terminated_generator<char*>>);
-        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char*&>(), std::declval<const IsValue&>())), stdext::terminated_generator<char*>>);
-        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char* const>(), std::declval<IsValue&>())), stdext::terminated_generator<char*>>);
-        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char* const&>(), std::declval<IsValue&>())), stdext::terminated_generator<char*>>);
+        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char*>(), std::declval<const IsValue&>())), stdext::terminated_generator<char*, IsValue>>);
+        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char*&>(), std::declval<const IsValue&>())), stdext::terminated_generator<char*, IsValue>>);
+        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char* const>(), std::declval<IsValue&>())), stdext::terminated_generator<char*, IsValue>>);
+        static_assert(std::is_same_v<decltype(stdext::terminated_generator(std::declval<char* const&>(), std::declval<IsValue&>())), stdext::terminated_generator<char*, IsValue>>);
 
         static constexpr char message[] = "Hello, world!";
         static constexpr auto isNul = IsValue{'\0'};
-        stdext::terminated_generator<const char*> g(message, isNul);
-
-        SECTION("copies compare equal")
-        {
-            stdext::terminated_generator<const char*> h = g;
-            CHECK(g == h);
-            CHECK(h == g);
-            CHECK_FALSE(g != h);
-            CHECK_FALSE(h != g);
-        }
-
-        SECTION("distinct values compare unequal")
-        {
-            stdext::terminated_generator<const char*> h("Greetings, human!", isNul);
-            CHECK_FALSE(g == h);
-            CHECK_FALSE(h == g);
-            CHECK(g != h);
-            CHECK(h != g);
-        }
-
-        SECTION("different predicates compare unequal")
-        {
-            auto isExclamation = IsValue{'!'};
-            stdext::terminated_generator<const char*> h(message, isExclamation);
-            REQUIRE(g.base() == h.base());
-            REQUIRE(g.predicate() != h.predicate());
-            CHECK_FALSE(g == h);
-            CHECK_FALSE(h == g);
-            CHECK(g != h);
-            CHECK(h != g);
-        }
-
-        SECTION("swap")
-        {
-            stdext::terminated_generator<const char*> h("Greetings, human!", isNul);
-
-            stdext::terminated_generator<const char*> test_g = g;
-            stdext::terminated_generator<const char*> test_h = h;
-            REQUIRE(g == test_g);
-            REQUIRE(g != test_h);
-            REQUIRE(h != test_g);
-            REQUIRE(h == test_h);
-
-            stdext::swap(g, h);
-            CHECK(g != test_g);
-            CHECK(g == test_h);
-            CHECK(h == test_g);
-            CHECK(h != test_h);
-
-            stdext::swap(g, h);
-            CHECK(g == test_g);
-            CHECK(g != test_h);
-            CHECK(h != test_g);
-            CHECK(h == test_h);
-        }
+        stdext::terminated_generator<const char*, IsValue> g(message, isNul);
 
         SECTION("base and predicate")
         {
             CHECK(g.base() == message);
-            CHECK(g.predicate() == isNul);
+            CHECK(g.predicate()('\0'));
+            CHECK_FALSE(g.predicate()('a'));
         }
 
         SECTION("preincrement")
@@ -883,23 +721,14 @@ namespace test
             CHECK(g.base() == message + 1);
         }
 
-        SECTION("postincrement")
-        {
-            REQUIRE(g.base() == message);
-            CHECK(*g++ == *message);
-            CHECK(g.base() == message + 1);
-        }
-
         SECTION("dereference matches iterator dereference")
         {
             REQUIRE(g.base() == message);
             CHECK(*g == *message);
-            CHECK(g.operator->() == message);
 
             ++g;
             REQUIRE(g.base() == message + 1);
             CHECK(*g == *(message + 1));
-            CHECK(g.operator->() == message + 1);
         }
 
         SECTION("conversion to bool")
@@ -915,7 +744,10 @@ namespace test
 
         SECTION("make_terminated_generator")
         {
-            CHECK(stdext::make_terminated_generator(&message[0], isNul) == g);
+            auto h = stdext::make_terminated_generator(&message[0], isNul);
+            static_assert(stdext::is_generator_v<decltype(h)>);
+            static_assert(std::is_same_v<decltype(h), stdext::terminated_generator<const char*, IsValue>>);
+            CHECK(&*h == message);
         }
     }
 

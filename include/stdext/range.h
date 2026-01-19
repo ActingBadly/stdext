@@ -1563,10 +1563,7 @@ namespace stdext
     class range_generator
     {
     public:
-        using iterator_category = generator_tag;
         using value_type = stdext::range_value_type<Range>;
-        using difference_type = stdext::range_difference_type<Range>;
-        using pointer = const value_type*;
         using reference = const value_type&;
         using range = Range;
 
@@ -1591,14 +1588,7 @@ namespace stdext
 
     public:
         reference operator * () const { return head(*r); }
-        pointer operator -> () const { return &head(*r); }
         range_generator& operator ++ () { drop_first(*r); return *this; }
-        iterator_proxy<range_generator> operator ++ (int)
-        {
-            iterator_proxy<range_generator> value(head(*r));
-            drop_first(*r);
-            return value;
-        }
         explicit operator bool () const { return r != nullptr && !is_empty(*r); }
 
     private:

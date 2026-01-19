@@ -412,10 +412,7 @@ namespace stdext
     class to_utf_generator
     {
     public:
-        using iterator_category = generator_tag;
         using value_type = Char;
-        using difference_type = generator_difference_type<Generator>;
-        using pointer = const value_type*;
         using reference = const value_type&;
         using generator = Generator;
 
@@ -449,14 +446,7 @@ namespace stdext
 
     public:
         reference operator * () { return value; }
-        reference operator -> () { return value; }
         to_utf_generator& operator ++ () { next(); return *this; }
-        iterator_proxy<to_utf_generator> operator ++ (int)
-        {
-            iterator_proxy<to_utf_generator> proxy = value;
-            next();
-            return proxy;
-        }
 
         explicit operator bool () const noexcept
         {

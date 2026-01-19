@@ -370,10 +370,7 @@ namespace stdext
         static_assert(std::is_trivially_copyable_v<POD>);
 
     public:
-        using iterator_category = generator_tag;
         using value_type = POD;
-        using difference_type = ptrdiff_t;
-        using pointer = const value_type*;
         using reference = const value_type&;
 
     public:
@@ -401,15 +398,7 @@ namespace stdext
 
     public:
         reference operator * () const noexcept { return _value; }
-        pointer operator -> () const noexcept { return &_value; }
         stream_generator& operator ++ () { next(); return *this; }
-        iterator_proxy<stream_generator> operator ++ (int)
-        {
-            iterator_proxy<stream_generator> proxy(_value);
-            ++*this;
-            return proxy;
-        }
-
         explicit operator bool () const noexcept { return _stream != nullptr; }
 
     private:
