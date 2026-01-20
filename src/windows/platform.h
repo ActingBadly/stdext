@@ -8,7 +8,6 @@
 #endif
 
 #define NOMINMAX
-struct IUnknown; // Header bug in v141_xp toolset refers to IUnknown before declaring it
 #include <Windows.h>
 
 #if defined _MSVC_TRADITIONAL && !_MSVC_TRADITIONAL

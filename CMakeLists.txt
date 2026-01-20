@@ -37,11 +37,7 @@ if(MSVC)
         PUBLIC _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
         PRIVATE _UNICODE
     )
-    # The XP toolset is incompatible with /permissive-.
-    if(NOT CMAKE_VS_PLATFORM_TOOLSET MATCHES [[_xp(,.*)?$]])
-        target_compile_options(stdext PUBLIC /Zc:preprocessor PRIVATE /permissive-)
-    endif()
-
+    target_compile_options(stdext PUBLIC /Zc:preprocessor PRIVATE /permissive-)
     set(NATVIS msvc/stdext.natvis)
 else()
     target_compile_options(stdext PRIVATE -Wno-switch)
